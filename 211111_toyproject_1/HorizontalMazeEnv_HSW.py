@@ -20,7 +20,7 @@ class HorizontalMazeEnv(gym.Env):
     TARGET = 0.65
 
 
-    def __init__(self, gradient=0.1, eps=0.2):
+    def __init__(self, gradient=0.01, eps=0.02):
         """
         1-dimensional Maze environment: which might suit simple linear problems
         :param gradient: (float) gradient that will change the state
@@ -93,7 +93,7 @@ if __name__ == '__main__':
     print(env.observation_space)
     print(env.observation_space.sample())
     obs = env.reset()
-    for step in range(100):
+    for step in range(1000):
         action = env.action_space.sample()
         print("Action at step {}: {}".format(step+1, action))
         obs, reward, done, info = env.step(action)
