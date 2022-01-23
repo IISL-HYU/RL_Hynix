@@ -1,7 +1,10 @@
-# Auto Circuit Design using Reinforcement Learning
-"SK-Hynix Project"
+# Auto Circuit Design via Reinforcement Learning
+SK-Hynix Project
+
 ## About 
-- 2021.11.XX ~ ongoing
-- Co-project with NiftyLab(Prof. Jaeduk Han, Hanyang Univ.)
+- on-going project (Since Nov.2021) 
+- Co-work with NiftyLab
+
+## 
 
 `\*Sample README\*`
