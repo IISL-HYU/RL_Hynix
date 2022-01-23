@@ -1,8 +1,8 @@
 # Auto Circuit Design via Reinforcement Learning
-SK-Hynix Project
+Industry project (SK-Hynix)
 
 ## About 
-- on-going project (Since Nov.2021) 
+- On-going project (Since Nov.2021) 
 - Co-work with NiftyLab
 
 ## 
