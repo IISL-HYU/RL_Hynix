@@ -171,8 +171,8 @@ class SimpleAmpEnv(gym.Env):
 
 if __name__ == "__main__":
     env = SimpleAmpEnv(gradient=0.001 ,verbose=1, ideal=False)
-    print(env.reset())
-    # check_env(env, warn=True)
+    # print(env.reset())
+    check_env(env, warn=True)
 
     # print(f"initial I_D : {obs}")
     # print(f"Target gain Bandwidth = {env.BANDWIDTH}")
