@@ -30,7 +30,7 @@ class SimpleAmpEnv(gym.Env):
     CAP_L = 100 * 1e-15     # 100fF
 
 
-    def __init__(self, gradient=0.001, verbose=0, ideal=True, reward_type='inverse'):
+    def __init__(self, gradient=0.001, verbose=0, ideal=True, reward_type='decrease_inverse'):
 
         super(SimpleAmpEnv, self).__init__()
         self.observation_space = spaces.Box(low=np.array([0.0, 0.0, 0.0]),
@@ -119,10 +119,8 @@ class SimpleAmpEnv(gym.Env):
             if reward_type == "inverse":
                 reward = (1 / self.previous_id)           
             elif reward_type == "decrease_inverse":
-                if self.previous_id > self.current_id:
+                if self.previous_id >= self.current_id:
                     reward += (1 / self.previous_id)
-                elif self.previous_id == self.current_id:
-                    pass
                 else:
                     reward =-20
             elif reward_type == "decrease_one":
