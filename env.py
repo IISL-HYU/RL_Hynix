@@ -34,7 +34,7 @@ class SimpleAmpEnv(gym.Env):
 
         super(SimpleAmpEnv, self).__init__()
         self.observation_space = spaces.Box(low=np.array([0.0, 0.0, 0.0]),
-                                            high=np.array([0.3, Inf, 1.0]),
+                                            high=np.array([1.0, Inf, 1.0]),
                                             shape=(3,),
                                             dtype=np.float32)
 
