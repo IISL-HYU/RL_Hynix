@@ -96,11 +96,10 @@ class SimpleAmpEnv(gym.Env):
         
         if self.current_id <= 0.0 or self.current_id >= 1.0:
 
-            # for checking the environment
-            if __name__ == '__main__':
-                done = True
             reward = -100
+            done = True
             self.current_id = self.previous_id
+
         obs = np.array([self.current_id, self.gain_bw, (self.Amp*self.BANDWIDTH)]).astype(np.float32)
         obs = self.normalize_target(obs)
         return obs, reward, done, info
@@ -145,7 +144,7 @@ class SimpleAmpEnv(gym.Env):
         :return (float), (float), (float) : gm, R_D, Gain_Bandwidth
         """
 
-        gm = (2 * current_id) / self.VOLTAGE  # siemens
+        gm = (2 * current_id + 1e-9) / self.VOLTAGE  # siemens
         rd = self.Amp / gm              # Ohm
 
         if self.ideal:
