@@ -34,7 +34,7 @@ class SimpleAmpEnv(gym.Env):
 
         super(SimpleAmpEnv, self).__init__()
         self.observation_space = spaces.Box(low=np.array([0.0, 0.0, 0.0]),
-                                            high=np.array([1.0, Inf, 1.0]),
+                                            high=np.array([0.3, Inf, 1.0]),
                                             shape=(3,),
                                             dtype=np.float32)
 
@@ -48,7 +48,7 @@ class SimpleAmpEnv(gym.Env):
         self.gm = 0.0
         self.rd = 0.0
         self.gain_bw = 0.0
-        self.observation_bounds = np.array([1., 600e9, 600e9])
+        self.observation_bounds = np.array([.3, 600e9, 600e9])
         self.verbose = verbose
         self.ideal = ideal
         self.time_step = 0
@@ -57,7 +57,7 @@ class SimpleAmpEnv(gym.Env):
 
     def reset(self):
         self.time_step = 0
-        self.current_id = np.random.random_sample() * 0.3
+        self.current_id = np.random.randint(300) * 1e-3     # random sampling between 0.0~0.3
         self.gm, self.rd, self.gain_bw = self._circuit_topology(current_id=self.current_id)
         obs = np.array([self.current_id, self.gain_bw, (self.Amp * self.BANDWIDTH)]).astype(np.float32)
         obs = self.normalize_target(obs)
