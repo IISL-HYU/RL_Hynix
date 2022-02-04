@@ -34,7 +34,7 @@ class DQNagent:
         self.train_start = 1000
 
         # Initialize Memory of size 2000
-        self.memory = deque(maxlen=2000)
+        self.memory = deque(maxlen=50000)
 
         # Make main_model and Target_model
         self.main_model = self.build_model()
