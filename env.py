@@ -48,6 +48,7 @@ class SimpleAmpEnv(gym.Env):
         self.gm = 0.0
         self.rd = 0.0
         self.gain_bw = 0.0
+        self.gbp_target = self.Amp * self.BANDWIDTH
         self.observation_bounds = np.array([.3, 600e9, 600e9])
         self.verbose = verbose
         self.ideal = ideal
@@ -74,8 +75,10 @@ class SimpleAmpEnv(gym.Env):
         info = {}
         done = False
         self.time_step += 1
+        # save current_id to previous_id (in order to compare the currents)
         self.previous_id = self.current_id
-
+        
+        # if over 1000 steps end episode (trajectory)
         if self.time_step >= 1000:
             done = True
             reward = 0
@@ -90,14 +93,21 @@ class SimpleAmpEnv(gym.Env):
         else:
             raise ValueError("Received invalid action={} which is not part of the action space".format(action))
         
+        # Compute gm, rd, gain bandwidth product
         self.gm, self.rd, self.gain_bw = self._circuit_topology(current_id=self.current_id)        
- 
+        
+        # End episode if the agent increases the current while it meets the Bandwidth constraint
+        if (self.check_constraint() & action==2):
+            done = True
+
         reward = self.get_reward(self.reward_type)
         
         if self.current_id <= 0.0 or self.current_id >= 1.0:
 
+            # for checking the environment
+            if __name__ == '__main__':
+                done = True
             reward = -100
-            done = True
             self.current_id = self.previous_id
 
         obs = np.array([self.current_id, self.gain_bw, (self.Amp*self.BANDWIDTH)]).astype(np.float32)
@@ -164,6 +174,13 @@ class SimpleAmpEnv(gym.Env):
             print("_____________________________________________________________")
 
         return gm, rd, gain_bw
+
+    # returns boolean if the circuit meets the constraint
+    def check_constraint(self):
+        boo = False
+        if self.gain_bw >= self.gbp_target:
+            boo = True
+        return boo
 
 
 if __name__ == "__main__":
