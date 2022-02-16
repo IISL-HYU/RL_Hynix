@@ -31,7 +31,7 @@ class DQNagent:
         self.epsilon_decay = 0.999
         self.epsilon_min = 0.1
         self.batch_size = 32
-        self.train_start = 1000
+        self.train_start = 10000
 
         # Initialize Memory of size 2000
         self.memory = deque(maxlen=50000)

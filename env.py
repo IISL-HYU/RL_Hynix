@@ -21,13 +21,14 @@ class SimpleAmpEnv(gym.Env):
     INCREASE = 2    
     STABLE = 1
     DECREASE = 0
-    REWARD_SET = {'inverse', 'decrease_inverse', 'decrease_one'}
+    REWARD_SET = {'inverse', 'decrease_inverse', 'decrease_one', 'AutoCkt'}
 
     # This target bandwidth should be a parameter
     BANDWIDTH = 50 * 1e9    # 50Grad/s
     Amp = 6
     VOLTAGE = 300 * 1e-3    # 300mV
     CAP_L = 100 * 1e-15     # 100fF
+    TARGET = 0.0091         # 9mA
 
 
     def __init__(self, gradient=0.001, verbose=0, ideal=True, reward_type='decrease_inverse'):
@@ -77,11 +78,6 @@ class SimpleAmpEnv(gym.Env):
         self.time_step += 1
         # save current_id to previous_id (in order to compare the currents)
         self.previous_id = self.current_id
-        
-        # if over 1000 steps end episode (trajectory)
-        if self.time_step >= 1000:
-            done = True
-            reward = 0
 
         # Observation (state) might change after action
         if action == 2:
@@ -95,19 +91,20 @@ class SimpleAmpEnv(gym.Env):
         
         # Compute gm, rd, gain bandwidth product
         self.gm, self.rd, self.gain_bw = self._circuit_topology(current_id=self.current_id)        
-        
-        # End episode if the agent increases the current while it meets the Bandwidth constraint
-        if (self.check_constraint() & action==2):
-            done = True
 
-        reward = self.get_reward(self.reward_type)
+        reward, done = self.get_reward(self.reward_type)
         
+        # if over 1000 steps end episode (trajectory)
+        if self.time_step >= 300:
+            done = True
+            reward = 0
+
         if self.current_id <= 0.0 or self.current_id >= 1.0:
 
             # for checking the environment
             if __name__ == '__main__':
                 done = True
-            reward = -100
+            # reward = -100
             self.current_id = self.previous_id
 
         obs = np.array([self.current_id, self.gain_bw, (self.Amp*self.BANDWIDTH)]).astype(np.float32)
@@ -120,27 +117,64 @@ class SimpleAmpEnv(gym.Env):
         return np.array(observations/self.observation_bounds).astype(np.float32)
         
     # return reward by case of individual reward types
-    def get_reward( self, reward_type):
+    def get_reward(self, reward_type):
         reward = 0
+        done = False
         
-        if self.gain_bw >= (self.Amp * self.BANDWIDTH):
-            
-            if reward_type == "inverse":
-                reward = (1 / self.previous_id)           
-            elif reward_type == "decrease_inverse":
-                if self.previous_id >= self.current_id:
+        if reward_type == "inverse":        # if the reward_type is "inverse" the environment returns -20 or 1/I_D 
+            if self.check_constraint():
+                reward += (1 / self.previous_id)
+            else:
+                reward = -20
+
+        elif reward_type == "decrease_inverse":     # if the reward type is "decrease_inverse", the environment returns -20, 1/I_D or 0
+            if self.check_constraint():
+                if self._is_current_decreasing(self.previous_id, self.current_id):
                     reward += (1 / self.previous_id)
                 else:
-                    reward =-20
-            elif reward_type == "decrease_one":
-                if self.previous_id >= self.current_id:
-                    reward += 1
+                    pass 
             else:
-                raise Exception("Incorrect keyword")
-                            
+                reward = -20
+
+        elif reward_type == "decrease_one":         # if the reward type is "decrease_one", the environment returnr -20, +1 or 0
+            if self.check_constraint():
+                if self._is_current_decreasing(self.previous_id, self.current_id):
+                    reward += 1
+                else:
+                    pass   
+            else:
+                reward = -20
+
+        elif reward_type == "AutoCkt":
+            r_i = min(-(self.current_id - self.TARGET) / (self.current_id + self.TARGET), 0)
+            r_b = min((self.gain_bw - self.gbp_target) / (self.gain_bw + self.gbp_target), 0)
+            r = r_i + r_b
+            if r == 0:
+                reward = 10
+                done = True
+            else:
+                reward = r
+
         else:
-            reward = -20
-        return reward
+            raise Exception(f"Incorrect keyword: {reward_type} is not included")
+        # if self.gain_bw >= (self.Amp * self.BANDWIDTH):
+            
+        #     if reward_type == "inverse":
+        #         reward = (1 / self.previous_id)           
+        #     elif reward_type == "decrease_inverse":
+        #         if self.previous_id >= self.current_id:
+        #             reward += (1 / self.previous_id)
+        #         else:
+        #             reward =-20
+        #     elif reward_type == "decrease_one":
+        #         if self.previous_id >= self.current_id:
+        #             reward += 1
+        #     else:
+        #         raise Exception("Incorrect keyword")
+                            
+        # else:
+        #     reward = -20
+        return reward, done
 
     # returns every computed values of the topology
     def _circuit_topology(self, current_id):
@@ -177,16 +211,23 @@ class SimpleAmpEnv(gym.Env):
 
     # returns boolean if the circuit meets the constraint
     def check_constraint(self):
+        """
+        return True : if the circuit meets the hard constraint
+        return False : if the circuit does not meet the hard constraint
+        """
         boo = False
         if self.gain_bw >= self.gbp_target:
             boo = True
         return boo
 
+    def _is_current_decreasing(self, previous_id, current_id) -> bool:
+        return True if (previous_id >= current_id) else False
+
 
 if __name__ == "__main__":
-    env = SimpleAmpEnv(gradient=0.001 ,verbose=1, ideal=False)
+    env = SimpleAmpEnv(gradient=0.001 ,verbose=1, ideal=False, reward_type="AutoCkt")
     # print(env.reset())
-    check_env(env, warn=True)
+    # check_env(env, warn=True)
 
     # print(f"initial I_D : {obs}")
     # print(f"Target gain Bandwidth = {env.BANDWIDTH}")
@@ -201,16 +242,16 @@ if __name__ == "__main__":
     #     obs, reward, done, info = env.step(action)
     #     print(f"ID after action {action}: {obs[0]:.3f}A", end='\n\n')
 
-    # action = 0
-    # obs = env.reset()
+    action = 0
+    obs = env.reset()
     # obs[0] = 0.1
-    # done = False
+    done = False
 
-    # while not done:
-    #     obs, reward, done, info = env.step(action)
-    #     print(f'{obs[0]:.4f} A , {obs[1]:.3f}, {obs[2]:.3f}', end=', ')
-    #     # print(obs[0], reward, done, info)
-    #     print("reward:", reward)
+    while not done:
+        obs, reward, done, info = env.step(action)
+        print(f'{env.current_id:.4f} A , {obs[1]:.3f}, {obs[2]:.3f}', end=', ')
+        # print(obs[0], reward, done, info)
+        print("reward:", reward)
 
 
 
