@@ -6,6 +6,7 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 import random
 import numpy as np
+import time 
 
 from collections import deque
 from tensorflow.keras.layers import Dense 
