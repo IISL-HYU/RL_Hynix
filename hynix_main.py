@@ -49,7 +49,7 @@ for episode in range(num_episodes):
         agent.append_sample(state, action, reward, next_state, done)
         score.append(reward) 
 
-        if len(agent.memory) >= agent.train_start:
+        if (len(agent.memory) >= agent.train_start) & (step % 32 == 0)  :
             lt1 = time.time()
             agent.train_model()
             lt2 = time.time() 
@@ -66,6 +66,7 @@ for episode in range(num_episodes):
     print(f"total steps: {step}")
     print(f"learning time / episode : {np.sum(total_lt):.2f}")
     print(f"total elapsed time: {time.time()-est:2f}")
+
 plt.figure(figsize=(9, 5))
 plt.plot(scores, label="mean episode reward")
 plt.ylim([-1, 1])

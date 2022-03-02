@@ -29,7 +29,7 @@ class DQNagent:
         self.discount_factor = 0.99
         self.learning_rate = 0.001
         self.epsilon = 1.0
-        self.epsilon_decay = 0.999
+        self.epsilon_decay = 0.99
         self.epsilon_min = 0.1
         self.batch_size = 32
         self.train_start = 10000
@@ -56,8 +56,8 @@ class DQNagent:
 
         # 1) Build model
         model = Sequential()
-        model.add(Dense(5, input_dim=self.state_size, activation='relu', kernel_initializer='he_uniform'))
-        model.add(Dense(5, activation='relu', kernel_initializer='he_uniform'))
+        model.add(Dense(64, input_dim=self.state_size, activation='relu', kernel_initializer='he_uniform'))
+        model.add(Dense(64, activation='relu', kernel_initializer='he_uniform'))
         model.add(Dense(self.action_size, activation='linear', kernel_initializer='he_uniform'))
 
         # 2) Compile the model

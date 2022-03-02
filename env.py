@@ -59,7 +59,8 @@ class SimpleAmpEnv(gym.Env):
 
     def reset(self):
         self.time_step = 0
-        self.current_id = np.random.randint(300) * 1e-3     # random sampling between 0.0~0.3
+        # self.current_id = np.random.randint(300) * 1e-3     # random sampling between 0.0~0.3
+        self.current_id = 0.15
         self.gm, self.rd, self.gain_bw = self._circuit_topology(current_id=self.current_id)
         obs = np.array([self.current_id, self.gain_bw, (self.Amp * self.BANDWIDTH)]).astype(np.float32)
         obs = self.normalize_target(obs)
